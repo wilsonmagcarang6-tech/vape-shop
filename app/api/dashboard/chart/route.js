@@ -7,8 +7,8 @@ export async function GET() {
     const today = new Date();
     const ninetyDaysAgo = subDays(today, 90);
 
-    // Fetch all billings in the last 90 days
-    const billings = await prisma.billing.findMany({
+    // Fetch all transactions in the last 90 days
+    const transactions = await prisma.transaction.findMany({
       where: {
         createdAt: {
           gte: ninetyDaysAgo
@@ -16,7 +16,9 @@ export async function GET() {
       },
       select: {
         createdAt: true,
-        TotalAmount: true
+        Qty: true,
+        SellingPrice: true,
+        BillingID: true
       },
       orderBy: {
         createdAt: 'asc'
@@ -32,13 +34,26 @@ export async function GET() {
       groupedData[dateKey] = { date: dateKey, sales: 0, transactions: 0 };
     }
 
-    // Fill with real data
-    billings.forEach(b => {
-      const dateKey = format(b.createdAt, 'yyyy-MM-dd');
+    // Track unique billings per day to count transactions accurately
+    const billingsByDay = {};
+
+    // Fill with real data from transactions
+    transactions.forEach(t => {
+      const dateKey = format(t.createdAt, 'yyyy-MM-dd');
       if (groupedData[dateKey]) {
-        groupedData[dateKey].sales += Number(b.TotalAmount);
-        groupedData[dateKey].transactions += 1;
+        groupedData[dateKey].sales += t.Qty * Number(t.SellingPrice);
+        
+        // Count unique billings per day for transaction count
+        if (!billingsByDay[dateKey]) {
+          billingsByDay[dateKey] = new Set();
+        }
+        billingsByDay[dateKey].add(t.BillingID);
       }
+    });
+
+    // Update transaction counts with unique billings
+    Object.keys(billingsByDay).forEach(dateKey => {
+      groupedData[dateKey].transactions = billingsByDay[dateKey].size;
     });
 
     // Convert back to sorted array

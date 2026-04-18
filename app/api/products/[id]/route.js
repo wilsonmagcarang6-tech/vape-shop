@@ -34,10 +34,38 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
     const productId = parseInt(id);
 
-    // First delete all related transactions
+    // Delete all related transactions
     await prisma.transaction.deleteMany({
       where: { ProductID: productId }
     });
+
+    // Clean up orphaned billings (billings with no transactions)
+    const billingsWithoutTransactions = await prisma.billing.findMany({
+      where: {
+        transactions: {
+          none: {}
+        }
+      },
+      select: { BillingID: true }
+    });
+
+    if (billingsWithoutTransactions.length > 0) {
+      await prisma.payment.deleteMany({
+        where: {
+          BillingID: {
+            in: billingsWithoutTransactions.map(b => b.BillingID)
+          }
+        }
+      });
+
+      await prisma.billing.deleteMany({
+        where: {
+          BillingID: {
+            in: billingsWithoutTransactions.map(b => b.BillingID)
+          }
+        }
+      });
+    }
 
     // Then delete the product
     await prisma.product.delete({
