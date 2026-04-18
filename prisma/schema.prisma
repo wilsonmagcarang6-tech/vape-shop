@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model admin {
+  AdminID  Int    @id @default(autoincrement())
+  username String @unique
+  password String
+}
+
+model product {
+  ProductID    Int           @id @default(autoincrement())
+  ProductName  String
+  CostPrice    Decimal       @db.Decimal(10, 2)
+  SellingPrice Decimal       @db.Decimal(10, 2)
+  Quantity     Int
+  ReorderPoint Int           @default(5)
+  createdAt    DateTime      @default(now())
+  PictureURL   String?
+  transactions transaction[]
+}
+
+model billing {
+  BillingID    Int           @id @default(autoincrement())
+  CustomerName String?
+  TotalAmount  Decimal       @db.Decimal(10, 2)
+  createdAt    DateTime      @default(now())
+  payments     payment[]
+  transactions transaction[]
+}
+
+model transaction {
+  TransactionID Int      @id @default(autoincrement())
+  ProductID     Int
+  BillingID     Int
+  Qty           Int
+  CostPrice     Decimal  @db.Decimal(10, 2)
+  SellingPrice  Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+  billing       billing  @relation(fields: [BillingID], references: [BillingID])
+  product       product  @relation(fields: [ProductID], references: [ProductID])
+
+  @@index([ProductID])
+  @@index([BillingID])
+}
+
+model payment {
+  PaymentID Int      @id @default(autoincrement())
+  BillingID Int
+  Amount    Decimal  @db.Decimal(10, 2)
+  Method    method
+  createdAt DateTime @default(now())
+  billing   billing  @relation(fields: [BillingID], references: [BillingID])
+
+  @@index([BillingID])
+}
+
+enum method {
+  Cash
+  GCash
+}
