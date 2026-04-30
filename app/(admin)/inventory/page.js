@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Pencil, ChevronDown, ChevronLeft, ChevronRight, Loader2, Package, RefreshCw, Trash2, Filter } from 'lucide-react';
 import AddProductForm from './components/AddProductForm';
 import RestockForm from './components/RestockForm';
+import { AiInventoryAdvisor } from '@/components/ai-inventory-advisor';
 import { toast } from 'sonner';
 import {
   Select,
@@ -44,8 +45,8 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, 
 
 const getStatusBadgeVariant = (product) => {
   if (product.Quantity <= 0) return 'destructive';
-  if (product.Quantity <= product.ReorderPoint) return 'warning';
-  return 'success';
+  if (product.Quantity <= product.ReorderPoint) return 'outline';
+  return 'secondary';
 };
 
 const getStatusText = (product) => {
@@ -200,6 +201,9 @@ export default function ProductManagement() {
           </Dialog>
         </div>
       </div>
+
+      {/* AI Inventory Advisor */}
+      <AiInventoryAdvisor />
 
       {/* Filters Card */}
       <Card>

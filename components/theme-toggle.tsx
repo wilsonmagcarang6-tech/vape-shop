@@ -7,6 +7,25 @@ import { Sun, Moon } from "lucide-react"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Toggle theme"
+        className="ml-2"
+        disabled
+      >
+        <Sun className="size-5 text-yellow-400" />
+      </Button>
+    )
+  }
 
   return (
     <Button

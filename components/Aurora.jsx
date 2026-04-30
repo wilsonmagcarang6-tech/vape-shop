@@ -72,18 +72,18 @@ struct ColorStop {
   float position;
 };
 
-#define COLOR_RAMP(colors, factor, finalColor) {              \
-  int index = 0;                                            \
-  for (int i = 0; i < 2; i++) {                               \
-     ColorStop currentColor = colors[i];                    \
-     bool isInBetween = currentColor.position <= factor;    \
-     index = int(mix(float(index), float(i), float(isInBetween))); \
-  }                                                         \
-  ColorStop currentColor = colors[index];                   \
-  ColorStop nextColor = colors[index + 1];                  \
-  float range = nextColor.position - currentColor.position; \
-  float lerpFactor = (factor - currentColor.position) / range; \
-  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); \
+#define COLOR_RAMP(colors, factor, finalColor) {              
+  int index = 0;                                            
+  for (int i = 0; i < 2; i++) {                               
+     ColorStop currentColor = colors[i];                    
+     bool isInBetween = currentColor.position <= factor;    
+     index = int(mix(float(index), float(i), float(isInBetween))); 
+  }                                                         
+  ColorStop currentColor = colors[index];                   
+  ColorStop nextColor = colors[index + 1];                  
+  float range = nextColor.position - currentColor.position; 
+  float lerpFactor = (factor - currentColor.position) / range; 
+  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); 
 }
 
 void main() {
@@ -112,7 +112,7 @@ void main() {
 `;
 
 export default function Aurora(props) {
-  const { colorStops = ['#5227FF', '#7cff67', '#5227FF'], amplitude = 1.0, blend = 0.5 } = props;
+  const { colorStops = ['#5227FF', '#7cff67', '#5227FF'], amplitude = 1.0, blend = 0.5, paused = false } = props;
   const propsRef = useRef(props);
   propsRef.current = props;
 
@@ -172,7 +172,8 @@ export default function Aurora(props) {
     ctn.appendChild(gl.canvas);
 
     let animateId = 0;
-    const update = t => {
+    const update = (t) => {
+      if (propsRef.current.paused) return;
       animateId = requestAnimationFrame(update);
       const { time = t * 0.01, speed = 1.0 } = propsRef.current;
       program.uniforms.uTime.value = time * speed * 0.1;
@@ -195,10 +196,10 @@ export default function Aurora(props) {
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas);
       }
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      const ext = gl.getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amplitude]);
+  }, [amplitude, blend, colorStops]);
 
   return <div ref={ctnDom} className="aurora-container" />;
 }

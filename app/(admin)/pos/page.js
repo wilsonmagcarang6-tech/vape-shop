@@ -37,6 +37,7 @@ const ProductsPage = () => {
   const [amountPaid, setAmountPaid] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
   const [discountType, setDiscountType] = useState('none');
+  const [isGcashConfirmed, setIsGcashConfirmed] = useState(false);
 
   // Add this ref for debouncing toast messages
   const toastTimeoutRef = useRef({});
@@ -126,10 +127,20 @@ const ProductsPage = () => {
         if (addQty > 0) {
           if (existingItemIdx >= 0) {
             // Add to existing item with same price
+            const existingBatches = newCart[existingItemIdx].batches || [];
+            const existingBatchIdx = existingBatches.findIndex(b => b.batchNumber === batch.BatchNumber);
+            let mergedBatches;
+            if (existingBatchIdx >= 0) {
+              mergedBatches = existingBatches.map((b, idx) =>
+                idx === existingBatchIdx ? { ...b, quantity: b.quantity + addQty } : b
+              );
+            } else {
+              mergedBatches = [...existingBatches, { batchNumber: batch.BatchNumber, quantity: addQty }];
+            }
             newCart[existingItemIdx] = {
               ...newCart[existingItemIdx],
               quantity: newCart[existingItemIdx].quantity + addQty,
-              batches: [...(newCart[existingItemIdx].batches || []), { batchNumber: batch.BatchNumber, quantity: addQty }]
+              batches: mergedBatches
             };
           } else {
             // Create new item grouped by price
@@ -236,6 +247,7 @@ const ProductsPage = () => {
         setAmountPaid("");
         setDiscountPercent(0);
         setDiscountType('none');
+        setIsGcashConfirmed(false);
         fetchProducts(); // Refetch products to update stock
       } else {
         toast.error(result.message || 'Failed to process payment.');
@@ -290,7 +302,7 @@ const ProductsPage = () => {
               ) : (
                 filteredProducts.map(product => (
                   <Card key={product.ProductID} className="p-0 flex flex-col shadow-md hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-[1.02] rounded-xl bg-card">
-                    <div className="h-50 w-full flex-shrink-0 bg-muted rounded-t-xl overflow-hidden">
+                    <div className="h-[200px] w-full flex-shrink-0 bg-muted rounded-t-xl overflow-hidden">
                       {product.PictureURL ? (
                         <img src={product.PictureURL} alt={product.ProductName} className="h-full w-full object-cover" />
                       ) : (
@@ -331,7 +343,7 @@ const ProductsPage = () => {
       </div>
 
       {/* Cart (Right Side) */}
-      <div className="w-100  flex-shrink-0 bg-card border-l flex flex-col shadow-lg">
+      <div className="w-[400px] flex-shrink-0 bg-card border-l flex flex-col shadow-lg">
         <div className="px-4 py-2 border-b bg-card">
           <h2 className="text-xl font-semibold tracking-tight">Cart</h2>
         </div>
@@ -437,14 +449,31 @@ const ProductsPage = () => {
             </div>
             <div className="space-y-4">
               <div className="flex items-center mb-1 gap-2">
-                <span className="text-xs font-medium whitespace-nowrap">Cash</span>
+                <span className="text-xs font-medium whitespace-nowrap">Payment</span>
+                <Select value={paymentMethod} onValueChange={(value) => {
+                  setPaymentMethod(value);
+                  if (value !== 'GCash') setIsGcashConfirmed(false);
+                }}>
+                  <SelectTrigger className="h-7 px-2 text-xs flex-1 ml-8">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="GCash">GCash</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center mb-1 gap-2">
+                <span className="text-xs font-medium whitespace-nowrap">
+                  {paymentMethod === 'GCash' ? 'Amount Sent' : 'Amount Received'}
+                </span>
                 <Input
                   type="number"
-                  placeholder="Amount Paid"
+                  placeholder={paymentMethod === 'GCash' ? 'GCash Amount' : 'Amount Paid'}
                   value={amountPaid}
                   onChange={(e) => setAmountPaid(e.target.value)}
                   min={isNaN(discountedTotal) ? 0 : discountedTotal}
-                  className="h-7 px-2 text-xs flex-1 ml-15"
+                  className="h-7 px-2 text-xs flex-1 ml-2"
                   disabled={isProcessing}
                 />
               </div>
@@ -452,6 +481,18 @@ const ProductsPage = () => {
                 <span>Change</span>
                 <span className="font-bold">₱{(parseFloat(amountPaid) >= discountedTotal ? (parseFloat(amountPaid) - discountedTotal).toLocaleString() : '0')}</span>
               </div>
+              {paymentMethod === 'GCash' && (
+                <label className="flex items-start gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={isGcashConfirmed}
+                    onChange={(e) => setIsGcashConfirmed(e.target.checked)}
+                    className="mt-0.5"
+                    disabled={isProcessing}
+                  />
+                  <span>I confirm that the GCash payment has been received before completing this sale.</span>
+                </label>
+              )}
               <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full" disabled={isProcessing || !amountPaid || parseFloat(amountPaid) < discountedTotal}>
@@ -478,7 +519,9 @@ const ProductsPage = () => {
                       )}
                       {/* <span className="font-medium">Total After Discount:</span>
                       <span>₱{discountedTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span> */}
-                      <span className="font-medium">Cash:</span>
+                      <span className="font-medium">Payment Method:</span>
+                      <span>{paymentMethod}</span>
+                      <span className="font-medium">{paymentMethod === 'GCash' ? 'Amount Sent:' : 'Cash:'}</span>
                       <span>₱{Number(amountPaid).toLocaleString()}</span>
                       <span className="font-medium">Change:</span>
                       <span>₱{(Number(amountPaid) - discountedTotal).toLocaleString()}</span>
@@ -489,7 +532,7 @@ const ProductsPage = () => {
                   </DialogHeader>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>Cancel</Button>
-                    <Button onClick={handlePayment} disabled={isProcessing}>
+                    <Button onClick={handlePayment} disabled={isProcessing || (paymentMethod === 'GCash' && !isGcashConfirmed)}>
                       {isProcessing ? 'Confirming...' : 'Confirm'}
                     </Button>
                   </DialogFooter>

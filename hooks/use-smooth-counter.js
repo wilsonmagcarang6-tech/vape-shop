@@ -20,7 +20,7 @@ export function useSmoothCounter(targetValue, duration = 1000, delay = 0) {
       const progress = Math.min((currentTime - startTime - delay) / duration, 1);
 
       if (progress >= 0) {
-        setDisplayValue(Math.floor(progress * targetValue));
+        setDisplayValue(Math.round(progress * targetValue * 100) / 100);
       }
 
       if (progress < 1) {

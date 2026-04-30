@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/auth';
 
 export async function POST(req) {
   try {
@@ -10,15 +11,37 @@ export async function POST(req) {
       return NextResponse.json({ message: 'Cart is empty' }, { status: 400 });
     }
 
+    const authz = await requireRole(['admin', 'cashier']);
+    if (!authz.ok) {
+      return authz.response;
+    }
+
+    const session = authz.session;
+    const cashierId = session.role === 'cashier' ? session.userId : null;
+    const adminId = session.role === 'admin' ? session.userId : null;
+
     // Calculate totals on server to be safe
     const totalAmount = cart.reduce((sum, item) => sum + (item.quantity * item.SellingPrice), 0);
-    const discountedTotal = totalAmount - (Discount || 0);
+    const safeDiscount = Math.max(0, Number(Discount) || 0);
+    const discountedTotal = Math.max(0, totalAmount - safeDiscount);
 
     // Use a transaction to ensure all operations succeed or fail together
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Create the billing record
       const customerName = FirstName && LastName ? `${FirstName} ${LastName}` : null;
-      
+
+      const productIds = [...new Set(cart.map((item) => item.ProductID))];
+      const products = await tx.product.findMany({
+        where: { ProductID: { in: productIds } },
+      });
+      const productMap = new Map(products.map((p) => [p.ProductID, p]));
+
+      for (const item of cart) {
+        const product = productMap.get(item.ProductID);
+        if (!product || product.Quantity < item.quantity) {
+          throw new Error(`Insufficient stock for ${item.ProductName}`);
+        }
+      }
+
       const billing = await tx.billing.create({
         data: {
           CustomerName: customerName,
@@ -26,40 +49,6 @@ export async function POST(req) {
         },
       });
 
-      // 2. Create transaction records and update inventory
-      for (const item of cart) {
-        // Double check stock first
-        const product = await tx.product.findUnique({
-          where: { ProductID: item.ProductID }
-        });
-
-        if (!product || product.Quantity < item.quantity) {
-          throw new Error(`Insufficient stock for ${item.ProductName}`);
-        }
-
-        // Create the transaction record (line item)
-        await tx.transaction.create({
-          data: {
-            ProductID: item.ProductID,
-            BillingID: billing.BillingID,
-            Qty: item.quantity,
-            CostPrice: product.CostPrice,
-            SellingPrice: item.SellingPrice,
-          },
-        });
-
-        // Update product quantity
-        await tx.product.update({
-          where: { ProductID: item.ProductID },
-          data: {
-            Quantity: {
-              decrement: item.quantity
-            }
-          }
-        });
-      }
-
-      // 3. Create the payment record
       await tx.payment.create({
         data: {
           BillingID: billing.BillingID,
@@ -68,10 +57,38 @@ export async function POST(req) {
         },
       });
 
+      await tx.transaction.createMany({
+        data: cart.map((item) => {
+          const product = productMap.get(item.ProductID);
+          return {
+            ProductID: item.ProductID,
+            BillingID: billing.BillingID,
+            Qty: item.quantity,
+            CostPrice: product.CostPrice,
+            SellingPrice: item.SellingPrice,
+          };
+        }),
+      });
+
+      const quantityByProduct = new Map();
+      for (const item of cart) {
+        quantityByProduct.set(
+          item.ProductID,
+          (quantityByProduct.get(item.ProductID) || 0) + item.quantity
+        );
+      }
+
+      for (const [productId, qty] of quantityByProduct.entries()) {
+        await tx.product.update({
+          where: { ProductID: productId },
+          data: { Quantity: { decrement: qty } },
+        });
+      }
+
       return billing;
     }, {
       maxWait: 10000,  // max time to wait for a connection (10s)
-      timeout: 30000,  // max time for the transaction to complete (30s)
+      timeout: 60000,  // max time for the transaction to complete (60s)
     });
 
     return NextResponse.json({ message: 'Sale processed successfully', data: result });

@@ -16,7 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, Settings2Icon, CircleHelpIcon, SearchIcon, DatabaseIcon, FileChartColumnIcon, FileIcon, CommandIcon, ShoppingCart } from "lucide-react"
+import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, Settings2Icon, CircleHelpIcon, SearchIcon, DatabaseIcon, FileChartColumnIcon, FileIcon, CommandIcon, ShoppingCart, Sparkles } from "lucide-react"
 
 const data = {
   user: {
@@ -54,6 +54,20 @@ const data = {
       icon: (
         <ChartBarIcon
         />
+      ),
+    },
+    {
+      title: "AI Assistant",
+      url: "/ai-assistant",
+      icon: (
+        <Sparkles className="size-4 text-purple-500" />
+      ),
+    },
+    {
+      title: "Staff Analytics",
+      url: "/staff-analytics",
+      icon: (
+        <UsersIcon className="size-4 text-emerald-500" />
       ),
     },
   ],

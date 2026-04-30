@@ -2,6 +2,7 @@
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
+import { AiChatWidget } from "@/components/ai-chat-widget"
 import {
   SidebarInset,
   SidebarProvider,
@@ -24,10 +25,11 @@ export default function AdminLayout({
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col animate-page-enter">
           {children}
         </div>
       </SidebarInset>
+      <AiChatWidget />
     </SidebarProvider>
   )
 }
