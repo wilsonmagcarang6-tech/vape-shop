@@ -8,9 +8,19 @@ datasource db {
 }
 
 model admin {
-  AdminID  Int    @id @default(autoincrement())
-  username String @unique
+  AdminID  Int      @id @default(autoincrement())
+  username String   @unique
   password String
+  billings billing[]
+}
+
+model cashier {
+  CashierID Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  fullName  String?
+  createdAt DateTime  @default(now())
+  billings  billing[]
 }
 
 model product {
@@ -30,8 +40,15 @@ model billing {
   CustomerName String?
   TotalAmount  Decimal       @db.Decimal(10, 2)
   createdAt    DateTime      @default(now())
+  CashierID    Int?
+  AdminID      Int?
+  cashier      cashier?      @relation(fields: [CashierID], references: [CashierID])
+  admin        admin?        @relation(fields: [AdminID], references: [AdminID])
   payments     payment[]
   transactions transaction[]
+
+  @@index([CashierID])
+  @@index([AdminID])
 }
 
 model transaction {
@@ -58,6 +75,51 @@ model payment {
   billing   billing  @relation(fields: [BillingID], references: [BillingID])
 
   @@index([BillingID])
+}
+
+model AiInsight {
+  id        Int      @id @default(autoincrement())
+  category  String   // e.g., 'sales', 'inventory', 'general'
+  title     String
+  message   String   @db.Text
+  severity  String   @default("info") // info, warning, success, danger
+  metadata  String?  @db.Text // JSON string for extra data
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
+}
+
+model SalesForecast {
+  id          Int      @id @default(autoincrement())
+  ProductID   Int?
+  forecastDate DateTime
+  predictedQty Float
+  actualQty   Float?
+  confidence  Float    @default(0.8)
+  createdAt   DateTime @default(now())
+
+  @@index([ProductID])
+  @@index([forecastDate])
+}
+
+model SmsAlert {
+  id          Int      @id @default(autoincrement())
+  ProductID   Int?
+  productName String
+  message     String   @db.Text
+  phoneNumber String
+  status      String   @default("pending") // pending, sent, failed
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model SmsSettings {
+  id            Int      @id @default(autoincrement())
+  phoneNumber   String?
+  twilioSid     String?
+  twilioToken   String?
+  twilioPhone   String?
+  alertsEnabled Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
 }
 
 enum method {

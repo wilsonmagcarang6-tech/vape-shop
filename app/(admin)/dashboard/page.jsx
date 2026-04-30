@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { SectionCards } from "@/components/section-cards"
+import { AiInsightsPanel } from "@/components/ai-insights-panel"
+import { AiForecastChart } from "@/components/ai-forecast-chart"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +43,10 @@ export default function Page() {
 
         <div className="px-4 lg:px-6">
           <ChartAreaInteractive />
+        </div>
+
+        <div className="px-4 lg:px-6">
+          <AiForecastChart />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 lg:px-6">
@@ -137,6 +143,10 @@ export default function Page() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        <div className="px-4 lg:px-6">
+          <AiInsightsPanel />
         </div>
       </div>
     </div>

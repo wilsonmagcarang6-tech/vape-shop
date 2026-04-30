@@ -55,11 +55,13 @@ export function SectionCards() {
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card animate-in zoom-in-95 duration-500">
       {/* Total Sales Card */}
-      <Card className="@container/card shadow-lg hover:shadow-xl transition-shadow">
+      <Card className="@container/card shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 border-l-4 border-l-green-500">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardDescription>Total Sales</CardDescription>
-            <DollarSignIcon className="size-4 text-green-500" />
+            <div className="p-2 bg-green-50 rounded-lg">
+              <DollarSignIcon className="size-4 text-green-500" />
+            </div>
           </div>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             ₱{stats.totalSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -73,11 +75,13 @@ export function SectionCards() {
       </Card>
 
       {/* Total Revenue (Profit) Card */}
-      <Card className="@container/card shadow-lg hover:shadow-xl transition-shadow">
+      <Card className="@container/card shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 border-l-4 border-l-emerald-500">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardDescription>Total Revenue</CardDescription>
-            <TrendingUpIcon className="size-4 text-emerald-600" />
+            <div className="p-2 bg-emerald-50 rounded-lg">
+              <TrendingUpIcon className="size-4 text-emerald-600" />
+            </div>
           </div>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-emerald-600">
             ₱{stats.profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -91,11 +95,13 @@ export function SectionCards() {
       </Card>
 
       {/* Low Stock Alerts Card */}
-      <Card className="@container/card shadow-lg hover:shadow-xl transition-shadow">
+      <Card className="@container/card shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 border-l-4 border-l-amber-500">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardDescription>Low Stock Alerts</CardDescription>
-            <AlertTriangleIcon className="size-4 text-amber-500" />
+            <div className="p-2 bg-amber-50 rounded-lg">
+              <AlertTriangleIcon className="size-4 text-amber-500" />
+            </div>
           </div>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.lowStock} Items
@@ -109,11 +115,13 @@ export function SectionCards() {
       </Card>
 
       {/* Inventory Value Card */}
-      <Card className="@container/card shadow-lg hover:shadow-xl transition-shadow">
+      <Card className="@container/card shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 border-l-4 border-l-purple-500">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardDescription>Inventory Value</CardDescription>
-            <PackageIcon className="size-4 text-purple-500" />
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <PackageIcon className="size-4 text-purple-500" />
+            </div>
           </div>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             ₱{stats.inventoryValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

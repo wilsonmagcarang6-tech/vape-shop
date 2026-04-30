@@ -1,4 +1,4 @@
- .aurora-container {
+.aurora-container {
   position: absolute;
   inset: 0;
   width: 100vw;
@@ -6,4 +6,9 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
